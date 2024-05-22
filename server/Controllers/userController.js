@@ -3,26 +3,32 @@ const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
 const UnverifiedUserModle = require("../Models/unVerifiedUserModel");
+const { sendOTPEmail, generateOTP } = require("../Utils/otpUtils");
+const { generateToken } = require("../Utils/tokenUtils");
 
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST,
-  port: process.env.EMAIL_PORT,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+const generateAndSendOTP = async (user) => {
+  const otp = generateOTP();
+  const otpExpiry = Date.now() + 10 * 60 * 1000;
 
-const sendOTPEmail = async (name, email, otp) => {
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: email,
-    subject: "Your Verification OTP Code",
-    text: `Hello ${name}, Your Verification code is ${otp}. Please do not Share this to anyone`,
-  };
+  user.otp = otp;
+  user.otpExpiry = otpExpiry;
 
-  await transporter.sendMail(mailOptions);
+  await user.save();
+  await sendOTPEmail(user.name, user.email, otp);
+};
+
+const verifyOTP = async (email, otp) => {
+  const user = await UserModel.findOne({ email });
+
+  if (!user || user.otp !== otp || user.otpExpiry < Date.now()) {
+    throw new Error("Invalid or expired OTP");
+  }
+
+  user.otp = null;
+  user.otpExpiry = null;
+  await user.save();
+
+  return user;
 };
 
 const register = async (req, res) => {
@@ -48,23 +54,15 @@ const register = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const otp = Math.floor(100000 + Math.random() * 900000);
-    const otpExpiry = Date.now() + 10 * 60 * 1000; // OTP valid 10 minutes
 
     const unverifiedUser = new UnverifiedUserModle({
       name,
       email,
       password: hashedPassword,
-      otp,
-      otpExpiry,
     });
+    await generateAndSendOTP(unverifiedUser);
 
-    await unverifiedUser.save();
-    await sendOTPEmail(name, email, otp);
-
-    res
-      .status(201)
-      .send({ message: "User registered successfully. OTP sent to email." });
+    res.status(201).send({ message: "OTP Sent to Your email. Please Verify" });
   } catch (error) {
     console.log(error);
     return res.status(500).send({ message: "Internal Server Issue" });
@@ -92,15 +90,7 @@ const VerifyOtp = async (req, res) => {
 
     await user.save();
     await UnverifiedUserModle.deleteOne({ email });
-    const payload = {
-      user: {
-        id: user.id,
-      },
-    };
-
-    const token = jwt.sign(payload, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
+    const token = generateToken(user.id);
 
     return res
       .status(200)
@@ -112,17 +102,43 @@ const VerifyOtp = async (req, res) => {
 };
 
 const login = async (req, res) => {
+  const { email, password } = req.body;
+
   try {
+    const user = await UserModel.findOne({ email });
+    if (!user) {
+      return res.status(400).send({ message: "Invalid credentials" });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).send({ message: "Invalid credentials" });
+    }
+
+    await generateAndSendOTP(user);
+
+    res.status(200).send({ message: "OTP sent to email" });
   } catch (error) {
     console.log(error);
     return res.status(500).send({ message: "Internal Server Issue" });
   }
 };
-//  const register = async (req, res) => {
-//   try {
-//   } catch (error) {
-//     console.log(error);
-//     return res.status(500).send({ message: "Internal Server Issue" });
-//   }
-// };
-module.exports = { register, VerifyOtp, login };
+const loginOtpVerify = async (req, res) => {
+  const { email, otp } = req.body;
+  try {
+    const user = await verifyOTP(email, otp);
+    const token = generateToken(user.id);
+
+
+    return res.status(200).send({
+      message: "Login successful",
+      token,
+      user: { _id: user._id, email: user.email, name: user.name },
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(400).send({ message: error.message });
+  }
+};
+
+module.exports = { register, VerifyOtp, login, loginOtpVerify };

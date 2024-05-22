@@ -14,12 +14,12 @@ const UserSchema = new Schema({
     type: String,
     required: true,
   },
-//   otp: {
-//     type: String,
-//   },
-//   otpExpiry: {
-//     type: Date,
-//   },
+  otp: {
+    type: String,
+  },
+  otpExpiry: {
+    type: Date,
+  },
 });
 
 const UserModel = model("User", UserSchema);
