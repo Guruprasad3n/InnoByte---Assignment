@@ -3,7 +3,11 @@ const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
 const UnverifiedUserModle = require("../Models/unVerifiedUserModel");
-const { sendOTPEmail, generateOTP } = require("../Utils/otpUtils");
+const {
+  sendOTPEmail,
+  generateOTP,
+  sendRegistrationSuccessEmail,
+} = require("../Utils/otpUtils");
 const { generateToken } = require("../Utils/tokenUtils");
 
 const generateAndSendOTP = async (user) => {
@@ -62,7 +66,14 @@ const register = async (req, res) => {
     });
     await generateAndSendOTP(unverifiedUser);
 
-    res.status(201).send({ message: "OTP Sent to Your email. Please Verify" });
+    res.status(201).send({
+      message: "OTP Sent to Your email. Please Verify",
+      data: {
+        name: unverifiedUser.name,
+        email: unverifiedUser.email,
+        id: unverifiedUser._id,
+      },
+    });
   } catch (error) {
     console.log(error);
     return res.status(500).send({ message: "Internal Server Issue" });
@@ -92,9 +103,17 @@ const VerifyOtp = async (req, res) => {
     await UnverifiedUserModle.deleteOne({ email });
     const token = generateToken(user.id);
 
-    return res
-      .status(200)
-      .send({ message: "User Successfully Registered", token, user });
+    await sendRegistrationSuccessEmail(user.name, user.email);
+
+    return res.status(200).send({
+      message: "User Successfully Registered",
+      token,
+      user: {
+        name: unverifiedUser.name,
+        email: unverifiedUser.email,
+        id: unverifiedUser._id,
+      },
+    });
   } catch (error) {
     console.log(error);
     return res.status(500).send({ message: "Internal Server Issue" });
@@ -128,7 +147,6 @@ const loginOtpVerify = async (req, res) => {
   try {
     const user = await verifyOTP(email, otp);
     const token = generateToken(user.id);
-
 
     return res.status(200).send({
       message: "Login successful",

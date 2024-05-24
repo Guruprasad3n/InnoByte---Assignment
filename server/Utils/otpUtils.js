@@ -25,7 +25,22 @@ const sendOTPEmail = async (name, email, otp) => {
   await transporter.sendMail(mailOptions);
 };
 
+
+const sendRegistrationSuccessEmail = async (name, email) => {
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: "Registration Successful",
+    text: `Hello ${name},\n\nYour registration was successful. Welcome to our platform!\n\nBest regards,\nTeam`,
+  };
+
+  await transporter.sendMail(mailOptions);
+};
+
+
+
 module.exports = {
   generateOTP,
   sendOTPEmail,
+  sendRegistrationSuccessEmail
 };
