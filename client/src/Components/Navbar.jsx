@@ -7,7 +7,7 @@ const Navbar = () => {
     <Box bg="teal" px={4} py={3}>
       <Flex alignItems="center">
         <Heading size="md" color="white">
-          Your App Name
+          <Link to={"/"}>Your App Name</Link>
         </Heading>
         <Spacer />
         <Flex gap={10} color={"white"}>
@@ -25,8 +25,8 @@ const Navbar = () => {
 
 export default Navbar;
 
-
-{/* <div style={{ backgroundColor: "wheat" }}>
+{
+  /* <div style={{ backgroundColor: "wheat" }}>
   <div>
     <h1>InnoByte</h1>
     <ul>
@@ -36,4 +36,5 @@ export default Navbar;
     </ul>
   </div>
 </div>
-</> */}
+</> */
+}

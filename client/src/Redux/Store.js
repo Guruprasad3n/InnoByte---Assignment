@@ -7,7 +7,7 @@ const rootReducer = combineReducers({
   user: userReducer,
 });
 const persistConfig = {
-  key: "user",
+  key: "root",
   version: 1,
   storage,
 };
