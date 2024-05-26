@@ -159,4 +159,23 @@ const loginOtpVerify = async (req, res) => {
   }
 };
 
-module.exports = { register, VerifyOtp, login, loginOtpVerify };
+const editUser = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const user = await UserModel.findById(id);
+    if (!user) {
+      return res.status(404).send({ message: "User Not Found" });
+    }
+    // const edit = 
+    return res
+      .status(200)
+      .send({ message: "User Updated Successfully", data: user });
+    console.log(user);
+  } catch (error) {
+    console.log(error);
+    return res.status(500).send({ message: "Failed to Edit data" });
+  }
+};
+
+module.exports = { register, VerifyOtp, login, loginOtpVerify, editUser };
