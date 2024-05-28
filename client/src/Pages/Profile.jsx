@@ -52,8 +52,8 @@ function Profile() {
 
   const handleOtpSubmit = (e) => {
     e.preventDefault();
-    // Add OTP verification logic here
-    if (otp === "123456") { // Replace this with actual OTP verification logic
+    
+    if (otp === "123456") { 
       setIsOtpModalOpen(false);
       setIsEditModalOpen(true);
     } else {
@@ -69,7 +69,7 @@ function Profile() {
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
-    // Handle form submission to update user details here
+   
     console.log(formData);
     setIsEditModalOpen(false);
   };
