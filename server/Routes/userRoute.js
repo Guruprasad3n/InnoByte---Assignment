@@ -13,6 +13,6 @@ router.post("/register", register);
 router.post("/verify-signup-otp", VerifyOtp);
 router.post("/login", login);
 router.post("/verify-login", loginOtpVerify);
-router.put("/edit-user/:id", editUser);
+router.patch("/edit-user/:id", editUser);
 
 module.exports = router;

@@ -161,17 +161,37 @@ const loginOtpVerify = async (req, res) => {
 
 const editUser = async (req, res) => {
   const { id } = req.params;
+  const { name, password } = req.body;
+  const { otp } = req.body;
 
   try {
     const user = await UserModel.findById(id);
     if (!user) {
       return res.status(404).send({ message: "User Not Found" });
     }
-    // const edit = 
-    return res
+
+    // Generate and send OTP if it's not already in request
+    if (!otp) {
+      await generateAndSendOTP(user);
+      return res.status(200).send({ message: "OTP sent to email" });
+    }
+
+    // Verify OTP
+    const verifiedUser = await verifyOTP(user.email, otp);
+
+    // Update user details
+    if (name) {
+      verifiedUser.name = name;
+    }
+    if (password) {
+      verifiedUser.password = await bcrypt.hash(password, 10);
+    }
+
+    await verifiedUser.save();
+
+    res
       .status(200)
-      .send({ message: "User Updated Successfully", data: user });
-    console.log(user);
+      .send({ message: "User Updated Successfully", data: verifiedUser });
   } catch (error) {
     console.log(error);
     return res.status(500).send({ message: "Failed to Edit data" });
