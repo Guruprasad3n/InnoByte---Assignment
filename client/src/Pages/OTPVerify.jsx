@@ -39,7 +39,7 @@ function OTPVerify() {
       );
       console.log("res", res.status);
       if (
-        res.data.status === 200 &&
+        res.status === 200 &&
         res.data &&
         res.data.message === "User Successfully Registered"
       ) {

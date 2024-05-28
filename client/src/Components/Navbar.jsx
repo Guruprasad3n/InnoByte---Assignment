@@ -1,8 +1,34 @@
-import React from "react";
-import { Box, Flex, Heading, Spacer, Button } from "@chakra-ui/react";
-import { Link } from "react-router-dom";
+import React, { useEffect } from "react";
+import {
+  Box,
+  Flex,
+  Heading,
+  Spacer,
+  Button,
+  Text,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+} from "@chakra-ui/react";
+import { Link, useNavigate } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
+import { logoutUser } from "../Redux/Auth/authSlice";
+import { ChevronDownIcon } from "@chakra-ui/icons";
+
 const Navbar = () => {
-  const handleLogin = () => {};
+  const user = useSelector((state) => state.user.user);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  useEffect(() => {
+    console.log(user);
+  }, [user]);
+  // console.log(user.user.name);
+  const handleLogout = () => {
+    dispatch(logoutUser());
+    navigate("/login");
+  };
+
   return (
     <Box bg="teal" px={4} py={3}>
       <Flex alignItems="center">
@@ -11,30 +37,31 @@ const Navbar = () => {
         </Heading>
         <Spacer />
         <Flex gap={10} color={"white"}>
-          <Link>Home</Link>
-          <Link>About</Link>
-          {/* <Link>Contact</Link> */}
+          <Link to="/home">Home</Link>
+          <Link to="/about">About</Link>
         </Flex>
-        <Button colorScheme="whiteAlpha" onClick={handleLogin} marginLeft={5}>
-          <Link to={"/login"}>Login</Link>
-        </Button>
+        {user ? (
+          <Menu>
+            <MenuButton
+              as={Button}
+              rightIcon={<ChevronDownIcon />}
+              colorScheme="teal"
+              ml={2}
+            >
+              {user.name}
+            </MenuButton>
+            <MenuList>
+              <MenuItem onClick={handleLogout}>Logout</MenuItem>
+            </MenuList>
+          </Menu>
+        ) : (
+          <Button colorScheme="whiteAlpha" marginLeft={5}>
+            <Link to={"/login"}>Login</Link>
+          </Button>
+        )}
       </Flex>
     </Box>
   );
 };
 
 export default Navbar;
-
-{
-  /* <div style={{ backgroundColor: "wheat" }}>
-  <div>
-    <h1>InnoByte</h1>
-    <ul>
-      <li>Home</li>
-      <li>About</li>
-      <li>Signin</li>
-    </ul>
-  </div>
-</div>
-</> */
-}
